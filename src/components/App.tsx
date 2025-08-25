@@ -7,15 +7,30 @@ import gsap from 'gsap';
 import { useLayoutEffect, useRef } from 'react';
 
 export const App = () => {
-  const { authOpen, analysisItem } = useUIStore();
+  const { authOpen, analysisItem, secureMode } = useUIStore();
   const [view, setView] = useState<'home' | 'dashboard'>('home');
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }} className={secureMode ? 'theme-secure' : undefined}>
       <Header onNavigate={setView} current={view} />
       <main style={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '2rem', position: 'relative' }}>
         <FloatingGrid />
-        {view === 'home' && <UploadPanel />}
-        {view === 'dashboard' && <Dashboard />}
+        <div style={{ position: 'relative', width: '100%', maxWidth: 1280, overflow: 'hidden' }}>
+          <motion.div
+            style={{ display: 'flex', width: '200%', willChange: 'transform' }}
+            animate={{ x: secureMode ? '-50%' : '0%' }}
+            transition={{ type: 'spring', stiffness: 70, damping: 16 }}
+          >
+            <div style={{ width: '50%', paddingInline: 0, display: 'flex', justifyContent: 'center' }} aria-hidden={secureMode}>
+              <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                {view === 'home' && <UploadPanel />}
+                {view === 'dashboard' && <Dashboard />}
+              </div>
+            </div>
+            <div style={{ width: '50%', paddingInline: 0, display: 'flex', justifyContent: 'center' }} aria-hidden={!secureMode}>
+              <SecureBrowserMode />
+            </div>
+          </motion.div>
+        </div>
       </main>
       {authOpen && <AuthModal />}
       {analysisItem && <AnalysisDrawer />}
@@ -29,13 +44,16 @@ export const App = () => {
 import { useState } from 'react';
 
 const Header = ({ onNavigate, current }: { onNavigate: (v: 'home' | 'dashboard') => void; current: string }) => {
-  const { setAuthOpen } = useUIStore();
+  const { setAuthOpen, secureMode, toggleSecureMode } = useUIStore();
   return (
     <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.85rem', padding: '0.85rem 1rem' }} className="stack-mobile">
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flex: 1, minWidth: 200 }}>
         <Logo />
       </div>
       <div style={{ display: 'flex', gap: '0.6rem' }}>
+        <button onClick={toggleSecureMode} style={{ background: secureMode ? 'linear-gradient(120deg,#ff4d67,#ffb347)' : undefined }}>
+          {secureMode ? 'Exit Secure' : 'Secure Mode'}
+        </button>
         <button
           onClick={() => setAuthOpen(true)}
           style={{ transition: 'all 0.2s ease', transform: 'scale(1)' }}
@@ -86,6 +104,46 @@ const FloatingGrid = () => (
     <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)', backgroundSize: '22px 22px', maskImage: 'radial-gradient(circle at center, black, transparent 70%)', opacity: 0.2 }} />
   </div>
 );
+
+// Secure Browser Mode Placeholder
+const SecureBrowserMode = () => {
+  const [url, setUrl] = useState('https://example.com');
+  const [loadUrl, setLoadUrl] = useState(url);
+  const [loading, setLoading] = useState(false);
+  return (
+    <div style={{ width: '100%', maxWidth: 1240, display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+      <h1 style={{ margin: 0, fontSize: '2rem', background: 'linear-gradient(110deg,#fff,#ffe7d2 40%,#ffb347)', WebkitBackgroundClip: 'text', color: 'transparent' }}>Secure Container Browser</h1>
+      <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.5, color: 'var(--text-dim)' }}>Ephemeral isolated browsing surface. Sessions reset on exit. Network instrumentation & deepfake shield overlays would appear here in a full build.</p>
+      <div className="secure-panel" style={{ borderRadius: 20, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 520, position: 'relative' }}>
+        <form onSubmit={(e)=>{ e.preventDefault(); if(!url.trim()) return; let u=url.trim(); if(!/^https?:\/\//i.test(u)) u='https://' + u; setLoadUrl(u); setLoading(true); }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0.6rem 0.75rem', background: '#1d252e', borderBottom: '1px solid #2c3642' }}>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <span style={{ width: 12, height: 12, borderRadius: '50%', background: '#ff5f56', boxShadow: '0 0 6px -2px #ff5f56aa' }} />
+            <span style={{ width: 12, height: 12, borderRadius: '50%', background: '#ffbd2e', boxShadow: '0 0 6px -2px #ffbd2eaa' }} />
+            <span style={{ width: 12, height: 12, borderRadius: '50%', background: '#27c93f', boxShadow: '0 0 6px -2px #27c93faa' }} />
+          </div>
+          <input value={url} onChange={e=>setUrl(e.target.value)} placeholder="Enter URL" spellCheck={false} style={{ flex:1, background:'#12181f', border:'1px solid #2c3642', borderRadius: 8, padding:'0.55rem 0.75rem', fontSize:'0.75rem', color:'#f1f5f9', fontFamily:'inherit' }} />
+          <button type="submit" className="gradient" style={{ fontSize: '0.7rem', padding: '0.55rem 0.9rem' }}>Open</button>
+        </form>
+        <div style={{ position:'relative', flex:1, background:'#0b0f13', display:'flex', alignItems:'stretch', justifyContent:'center', overflow:'hidden' }}>
+          <iframe title="secure-sandbox" src={loadUrl} sandbox="allow-same-origin allow-scripts allow-forms allow-pointer-lock allow-popups" style={{ flex:1, border:'none', background:'#0d1116' }} onLoad={()=>setLoading(false)} />
+          {loading && (
+            <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'rgba(10,14,18,0.72)', backdropFilter:'blur(6px)', gap:18 }}>
+              <div style={{ width:48, height:48, borderRadius:'50%', background:'linear-gradient(120deg,#ffbd2e,#ff5f56)', display:'flex', alignItems:'center', justifyContent:'center', position:'relative' }}>
+                <div style={{ position:'absolute', inset:4, border:'3px solid rgba(255,255,255,0.2)', borderTopColor:'#fff', borderRadius:'50%', animation:'spin 1s linear infinite' }} />
+              </div>
+              <div style={{ fontSize:'0.75rem', letterSpacing:1.6, textTransform:'uppercase', color:'#ffb347' }}>Loading…</div>
+            </div>
+          )}
+          <div style={{ position:'absolute', inset:0, pointerEvents:'none', mixBlendMode:'overlay', background:'repeating-linear-gradient(0deg,rgba(255,255,255,0.02) 0 2px, transparent 2px 4px)' }} />
+        </div>
+        <div style={{ padding:'0.6rem 0.85rem', display:'flex', gap:10, flexWrap:'wrap', background:'#161d24', borderTop:'1px solid #2a323d' }}>
+          {['Filesystem Seal','Network Proxy','Script Guard','Media Shield','Memory Scrubber'].map(t => <span key={t} style={{ fontSize:'0.55rem', letterSpacing:1.6, textTransform:'uppercase', background:'#1c252f', border:'1px solid #2c3642', padding:'0.4rem 0.6rem', borderRadius: 8, color:'#ffb347' }}>{t}</span>)}
+        </div>
+        <div className="panel-soft-glow" />
+      </div>
+    </div>
+  );
+};
 
 import type { AnalysisItem } from '../hooks/useUIStore';
 

@@ -24,6 +24,8 @@ interface UIState {
   addReferralCredit: () => void;
   user?: { id: string; email: string } | null;
   setUser: (u: UIState['user']) => void;
+  secureMode: boolean;
+  toggleSecureMode: () => void;
 }
 
 const DAILY_FREE = 15;
@@ -41,4 +43,6 @@ export const useUIStore = create<UIState>((set) => ({
   addReferralCredit: () => set((s) => ({ referralCredits: s.referralCredits + 1, dailyRemaining: s.dailyRemaining + 1 })),
   user: null,
   setUser: (u) => set({ user: u }),
+  secureMode: false,
+  toggleSecureMode: () => set(s => ({ secureMode: !s.secureMode })),
 }));

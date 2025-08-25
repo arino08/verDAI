@@ -69,7 +69,7 @@ export const UploadPanel = () => {
           overflow: 'hidden',
           boxShadow: '0 10px 40px -18px #000, 0 0 0 1px rgba(120,140,170,0.06)'
   }} className="upload-panel">
-          <Glow />
+          {/* Decorative glow moved to CSS pseudo-elements to eliminate harsh clipped edges */}
           <h1 style={{ margin: '0 0 0.75rem', fontSize: '2.2rem', background: 'linear-gradient(130deg,#ffffff,#b7c1d6 40%,#5d6bff)', WebkitBackgroundClip: 'text', color: 'transparent', textAlign: 'center' }}>Upload. Analyze. Trust.</h1>
         <p style={{
             margin: '0 0 1.5rem',
@@ -104,9 +104,9 @@ export const UploadPanel = () => {
             marginBottom: '100px'
           }} className="upload-drop">
             <input ref={inputRef} type="file" accept="image/*,video/*" onChange={(e) => onFiles(e.target.files)} />
-            {/* overlay pattern for contrast */}
-            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(circle at 30% 20%, rgba(93,107,255,0.18), transparent 60%)', opacity: 0.5 }} />
-            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(45deg, rgba(255,255,255,0.04) 0 2px, transparent 2px 6px)', mixBlendMode: 'overlay', opacity: 0.25 }} />
+            {/* overlay pattern for contrast (reduced intensity to fix glow box issue) */}
+            <div className="drop-radial-overlay" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(circle at 30% 22%, rgba(93,107,255,0.14), transparent 62%)', opacity: 0.42, mixBlendMode: 'screen' }} />
+            <div className="drop-overlay-lines" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(46deg, rgba(255,255,255,0.035) 0 2px, transparent 2px 6px)', mixBlendMode: 'overlay', opacity: 0.18 }} />
             <svg width="54" height="54" viewBox="0 0 48 48" fill="none" style={{ display: 'block', margin: '0 auto 0.95rem', opacity: 1, marginBottom: '1.95rem' }}>
               <rect x="4" y="10" width="40" height="30" rx="8" stroke="#5d6bff" strokeWidth="1.4" strokeDasharray="5 4" fill="rgba(93,107,255,0.07)" />
               <path d="M24 16v14m0 0 7-7m-7 7-7-7" stroke="#3ddc97" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -128,12 +128,7 @@ export const UploadPanel = () => {
   );
 };
 
-const Glow = () => (
-  <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-    <div style={{ position: 'absolute', width: 280, height: 280, background: 'radial-gradient(circle,#4855ff33,#4855ff00 70%)', top: -60, left: -40, filter: 'blur(30px)' }} />
-    <div style={{ position: 'absolute', width: 220, height: 220, background: 'radial-gradient(circle,#3ddc9733,#3ddc9700 70%)', bottom: -40, right: -20, filter: 'blur(30px)' }} />
-  </div>
-);
+// (Removed old Glow component; now handled in CSS)
 
 const QuotaPill = () => {
   const { dailyRemaining } = useUIStore();
