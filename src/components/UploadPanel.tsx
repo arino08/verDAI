@@ -58,7 +58,7 @@ export const UploadPanel = () => {
   return (
     <div style={{ width: '100%', maxWidth: 680 }} ref={panelRef}>
       <AnimatePresence mode="wait">
-        <motion.div key="panel" initial={{ opacity: 0, y: 20, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.5, ease: 'easeOut' }} style={{
+  <motion.div key="panel" initial={{ opacity: 0, y: 20, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.5, ease: 'easeOut' }} style={{
           background: 'linear-gradient(165deg, rgba(25,32,44,0.92) 0%, rgba(13,17,23,0.9) 60%)',
           backdropFilter: 'blur(18px) saturate(130%)',
           WebkitBackdropFilter: 'blur(18px) saturate(130%)',
@@ -68,7 +68,7 @@ export const UploadPanel = () => {
           position: 'relative',
           overflow: 'hidden',
           boxShadow: '0 10px 40px -18px #000, 0 0 0 1px rgba(120,140,170,0.06)'
-        }}>
+  }} className="upload-panel">
           <Glow />
           <h1 style={{ margin: '0 0 0.75rem', fontSize: '2.2rem', background: 'linear-gradient(130deg,#ffffff,#b7c1d6 40%,#5d6bff)', WebkitBackgroundClip: 'text', color: 'transparent', textAlign: 'center' }}>Upload. Analyze. Trust.</h1>
         <p style={{
@@ -102,7 +102,7 @@ export const UploadPanel = () => {
             flexDirection: 'column',
             justifyContent: 'center',
             marginBottom: '100px'
-          }}>
+          }} className="upload-drop">
             <input ref={inputRef} type="file" accept="image/*,video/*" onChange={(e) => onFiles(e.target.files)} />
             {/* overlay pattern for contrast */}
             <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(circle at 30% 20%, rgba(93,107,255,0.18), transparent 60%)', opacity: 0.5 }} />

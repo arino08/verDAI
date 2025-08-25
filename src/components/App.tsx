@@ -12,7 +12,7 @@ export const App = () => {
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Header onNavigate={setView} current={view} />
-      <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', position: 'relative' }}>
+      <main style={{ flex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '2rem', position: 'relative' }}>
         <FloatingGrid />
         {view === 'home' && <UploadPanel />}
         {view === 'dashboard' && <Dashboard />}
@@ -31,44 +31,29 @@ import { useState } from 'react';
 const Header = ({ onNavigate, current }: { onNavigate: (v: 'home' | 'dashboard') => void; current: string }) => {
   const { setAuthOpen } = useUIStore();
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem 1.5rem' }}>
-      <Logo />
-      <div style={{ flex: 1 }} />
-      <button
-        onClick={() => setAuthOpen(true)}
-        style={{
-          transition: 'all 0.2s ease',
-          transform: 'scale(1)',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'scale(1.05)';
-          e.currentTarget.style.opacity = '0.9';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'scale(1)';
-          e.currentTarget.style.opacity = '1';
-        }}
-      >
-        Login / Signup
-      </button>
-      <button
-        className="gradient"
-        onClick={() => onNavigate(current === 'dashboard' ? 'home' : 'dashboard')}
-        style={{
-          transition: 'all 0.2s ease',
-          transform: 'scale(1)',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'scale(1.05)';
-          e.currentTarget.style.opacity = '0.9';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'scale(1)';
-          e.currentTarget.style.opacity = '1';
-        }}
-      >
-        {current === 'dashboard' ? 'Back' : 'Dashboard'}
-      </button>
+    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.85rem', padding: '0.85rem 1rem' }} className="stack-mobile">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flex: 1, minWidth: 200 }}>
+        <Logo />
+      </div>
+      <div style={{ display: 'flex', gap: '0.6rem' }}>
+        <button
+          onClick={() => setAuthOpen(true)}
+          style={{ transition: 'all 0.2s ease', transform: 'scale(1)' }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.opacity = '0.9'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.opacity = '1'; }}
+        >
+          Login / Signup
+        </button>
+        <button
+          className="gradient"
+          onClick={() => onNavigate(current === 'dashboard' ? 'home' : 'dashboard')}
+          style={{ transition: 'all 0.2s ease', transform: 'scale(1)' }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.opacity = '0.9'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.opacity = '1'; }}
+        >
+          {current === 'dashboard' ? 'Back' : 'Dashboard'}
+        </button>
+      </div>
     </div>
   );
 };
@@ -120,11 +105,11 @@ const Dashboard = () => {
   const metricAverages = Object.entries(metricSums).map(([k,{sum,c}]) => ({ k, v: sum / c }));
 
   return (
-    <div style={{ width: '100%', maxWidth: 1180, display: 'flex', flexDirection: 'column', gap: '1.6rem', position: 'relative' }}>
+  <div style={{ width: '100%', maxWidth: 1180, display: 'flex', flexDirection: 'column', gap: '1.6rem', position: 'relative' }}>
       <h1 style={{ margin: 0, fontSize: '2.2rem', background: 'linear-gradient(120deg,#fff,#9ca9c8 40%,#7f5dff)', WebkitBackgroundClip: 'text', color: 'transparent' }}>Analysis Dashboard</h1>
       {total === 0 && <div style={{ opacity: 0.65, fontSize: '0.9rem' }}>No analyses yet. Upload media to begin.</div>}
       {total > 0 && (
-        <div style={{ display: 'grid', gap: '1.2rem', gridTemplateColumns: 'repeat(auto-fit, minmax(220px,1fr))' }}>
+  <div style={{ display: 'grid', gap: '1.2rem', gridTemplateColumns: 'repeat(auto-fit, minmax(220px,1fr))' }} className="dashboard-grid">
           <StatCard label="Total Analyses" value={total} />
           <StatCard label="Avg Trust" value={avgScore} suffix="%" gradient="linear-gradient(90deg,#4855ff,#3ddc97)" />
           <StatCard label="Image %" value={Math.round((history.filter(h=>h.type==='image').length/total)*100)} suffix="%" />
@@ -132,9 +117,9 @@ const Dashboard = () => {
         </div>
       )}
       {metricAverages.length > 0 && (
-        <div style={{ background: 'rgba(17,21,29,0.6)', border: '1px solid #1f2733', borderRadius: 18, padding: '1.2rem 1.3rem', display: 'flex', flexDirection: 'column', gap: 16 }}>
+  <div style={{ background: 'rgba(17,21,29,0.6)', border: '1px solid #1f2733', borderRadius: 18, padding: '1.2rem 1.3rem', display: 'flex', flexDirection: 'column', gap: 16 }} className="history-full">
           <SectionTitle>Metric Averages</SectionTitle>
-          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }} className="metric-wrap">
             {metricAverages.map(m => (
               <div key={m.k} style={{ width: 160 }}>
                 <div style={{ fontSize: '0.6rem', letterSpacing: 1.5, textTransform: 'uppercase', color: '#6e7a8b', marginBottom: 6 }}>{m.k}</div>

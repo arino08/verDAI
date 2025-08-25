@@ -79,3 +79,30 @@ input[type="file"] { display: none; }
 
 .fade-in { animation: fade 0.6s ease; }
 @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Mobile optimizations */
+@media (max-width: 860px) {
+  body { font-size: 15px; }
+  h1 { font-size: 1.9rem !important; }
+  button { padding: 0.65rem 0.95rem; font-size: 0.9rem; }
+  main { padding: 1.25rem !important; }
+}
+@media (max-width: 640px) {
+  h1 { font-size: 1.65rem !important; }
+  .stack-mobile { flex-direction: column !important; align-items: stretch !important; }
+  .hide-mobile { display: none !important; }
+  .upload-panel { padding: 1.6rem 1.25rem 2.1rem !important; border-radius: 22px !important; }
+  .upload-drop { padding: 1.8rem 1rem 1.7rem !important; margin-bottom: 2rem !important; min-height: 170px !important; }
+  .quota-row { flex-direction: column; align-items: stretch !important; gap: 0.75rem !important; }
+  footer { padding: 0.9rem 0.5rem !important; font-size: 0.65rem !important; }
+  .dashboard-grid { grid-template-columns: repeat(auto-fit,minmax(150px,1fr)) !important; gap: 0.8rem !important; }
+  .history-full { padding: 1rem 1rem !important; }
+  .metric-wrap > div { width: 130px !important; }
+}
+@media (max-width: 420px) {
+  h1 { font-size: 1.45rem !important; }
+  button { font-size: 0.8rem; }
+  .upload-panel { padding: 1.4rem 1rem 1.8rem !important; }
+  .upload-drop { padding: 1.5rem 0.8rem 1.4rem !important; min-height: 150px !important; }
+  .metric-wrap > div { width: 110px !important; }
+}
