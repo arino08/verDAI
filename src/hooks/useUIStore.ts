@@ -26,6 +26,9 @@ interface UIState {
   setUser: (u: UIState['user']) => void;
   secureMode: boolean;
   toggleSecureMode: () => void;
+  setSecureMode: (v: boolean) => void;
+  secureUrl: string;
+  setSecureUrl: (u: string) => void;
 }
 
 const DAILY_FREE = 15;
@@ -45,4 +48,7 @@ export const useUIStore = create<UIState>((set) => ({
   setUser: (u) => set({ user: u }),
   secureMode: false,
   toggleSecureMode: () => set(s => ({ secureMode: !s.secureMode })),
+  setSecureMode: (v) => set({ secureMode: v }),
+  secureUrl: 'https://example.com',
+  setSecureUrl: (u) => set({ secureUrl: u }),
 }));

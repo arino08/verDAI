@@ -9,6 +9,8 @@ export const UploadPanel = () => {
   const { user, setAuthOpen, setAnalysisItem, addHistory, decrementQuota, dailyRemaining, referralCredits } = useUIStore();
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [url, setUrl] = useState('');
+  const [urlErr, setUrlErr] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const onFiles = useCallback(async (files: FileList | null) => {
@@ -55,6 +57,57 @@ export const UploadPanel = () => {
     }
   }, []);
 
+  const analyseFromUrl = async () => {
+    setUrlErr(null);
+    const raw = url.trim();
+    if(!raw) { setUrlErr('Enter a URL'); return; }
+    let u = raw;
+    if(!/^https?:\/\//i.test(u)) u = 'https://' + u;
+    try {
+      // Determine media type by extension quickly (demo only)
+      const lower = u.toLowerCase();
+      const videoExt = ['.mp4','.mov','.webm','.m4v'];
+      const imageExt = ['.jpg','.jpeg','.png','.gif','.webp'];
+      const ext = [...videoExt,...imageExt].find(e=> lower.includes(e));
+      if(!ext) { setUrlErr('Needs direct image/video URL'); return; }
+      const type: 'image' | 'video' = videoExt.some(e=> lower.includes(e)) ? 'video' : 'image';
+      if(!user) {
+        setUploading(true);
+        const temp = { id: crypto.randomUUID(), name: u, status: 'processing' as const, type, createdAt: Date.now() };
+        setAnalysisItem(temp);
+        setTimeout(()=> setAuthOpen(true), 600);
+        setUploading(false);
+        return;
+      }
+      if (dailyRemaining <= 0) { setUrlErr('Daily limit reached'); return; }
+      setUploading(true);
+      const item = { id: crypto.randomUUID(), name: u, status: 'pending' as const, type, createdAt: Date.now() };
+      setAnalysisItem(item);
+      decrementQuota();
+      const result = await fakeAnalyse(type);
+      const doneItem = { ...item, status: 'done' as const, score: result.score, metrics: result.metrics, issues: result.issues };
+      setAnalysisItem(doneItem);
+      addHistory(doneItem);
+      setUploading(false);
+      setUrl('');
+    } catch (e:any) {
+      console.error(e); setUrlErr('Failed to analyse URL'); setUploading(false);
+    }
+  };
+
+  // Quick paste handler: if user pastes a URL while panel focused, capture it
+  const panelPasteRef = useRef<HTMLDivElement | null>(null);
+  useLayoutEffect(()=> {
+    const handler = (e: ClipboardEvent) => {
+      if(!panelPasteRef.current) return;
+      if(document.activeElement && (document.activeElement as HTMLElement).tagName === 'INPUT') return; // let native inputs handle
+      const text = e.clipboardData?.getData('text');
+      if(text && /^https?:\/\//i.test(text)) { setUrl(text); }
+    };
+    panelPasteRef.current?.addEventListener('paste', handler as any);
+    return () => panelPasteRef.current?.removeEventListener('paste', handler as any);
+  }, []);
+
   return (
     <div style={{ width: '100%', maxWidth: 680 }} ref={panelRef}>
       <AnimatePresence mode="wait">
@@ -68,7 +121,7 @@ export const UploadPanel = () => {
           position: 'relative',
           overflow: 'hidden',
           boxShadow: '0 10px 40px -18px #000, 0 0 0 1px rgba(120,140,170,0.06)'
-  }} className="upload-panel">
+  }} className="upload-panel" ref={panelPasteRef}>
           {/* Decorative glow moved to CSS pseudo-elements to eliminate harsh clipped edges */}
           <h1 style={{ margin: '0 0 0.75rem', fontSize: '2.2rem', background: 'linear-gradient(130deg,#ffffff,#b7c1d6 40%,#5d6bff)', WebkitBackgroundClip: 'text', color: 'transparent', textAlign: 'center' }}>Upload. Analyze. Trust.</h1>
         <p style={{
@@ -118,7 +171,16 @@ export const UploadPanel = () => {
             {uploading && <div style={{ marginTop: '1rem', fontSize: '0.75rem', color: 'var(--accent)' }}>Uploading...</div>}
           </div>
 
-          <div style={{ display: 'flex', marginTop: '1.7rem', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          {/* Direct URL input */}
+          <div style={{ marginTop: -70, marginBottom: 90, display:'flex', flexDirection:'column', gap:10 }}>
+            <div style={{ display:'flex', gap:8, alignItems:'stretch' }}>
+              <input value={url} onChange={e=>{ setUrl(e.target.value); setUrlErr(null); }} placeholder="Paste direct image/video URL" spellCheck={false} style={{ flex:1, background:'#121921', border:'1px solid #1f2733', borderRadius:14, padding:'0.85rem 0.95rem', fontSize:'0.8rem', color:'var(--text)', outline:'none' }} />
+              <button disabled={uploading} onClick={analyseFromUrl} style={{ fontSize:'0.7rem', padding:'0.75rem 1rem', opacity: uploading?0.6:1 }}>{uploading? '...' : 'Analyse URL'}</button>
+            </div>
+            {urlErr && <div style={{ fontSize:'0.6rem', color:'var(--danger)', letterSpacing:1, textTransform:'uppercase' }}>{urlErr}</div>}
+            <div style={{ fontSize:'0.55rem', letterSpacing:1.8, textTransform:'uppercase', color:'#586170' }}>Tip: Press Ctrl+V while panel focused to auto-fill URL</div>
+          </div>
+          <div style={{ display: 'flex', marginTop: '0.7rem', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
             <QuotaPill />
             <ReferralPill credits={referralCredits} />
           </div>

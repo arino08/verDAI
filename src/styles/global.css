@@ -82,7 +82,7 @@ body::before {
   mix-blend-mode:overlay; opacity:.25; }
 /* Drop overlays refinement */
 /* Drop zone overlays: stronger mask feather + plus-lighter compose to avoid visible edge box */
-.drop-radial-overlay { 
+.drop-radial-overlay {
   background:
     radial-gradient(circle at 35% 30%, rgba(93,107,255,0.34) 0%, rgba(93,107,255,0.12) 35%, transparent 62%),
     radial-gradient(circle at 75% 72%, rgba(61,220,151,0.28) 0%, rgba(61,220,151,0.10) 38%, transparent 64%);

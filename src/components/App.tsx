@@ -1,4 +1,5 @@
 import { UploadPanel } from './UploadPanel';
+import { ExtensionShowcase } from './ExtensionShowcase';
 import { AuthModal } from './AuthModal';
 import { useUIStore } from '../hooks/useUIStore';
 import { AnalysisDrawer } from './AnalysisDrawer';
@@ -8,7 +9,7 @@ import { useLayoutEffect, useRef } from 'react';
 
 export const App = () => {
   const { authOpen, analysisItem, secureMode } = useUIStore();
-  const [view, setView] = useState<'home' | 'dashboard'>('home');
+  const [view, setView] = useState<'home' | 'dashboard' | 'extension'>('home');
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }} className={secureMode ? 'theme-secure' : undefined}>
       <Header onNavigate={setView} current={view} />
@@ -24,6 +25,7 @@ export const App = () => {
               <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
                 {view === 'home' && <UploadPanel />}
                 {view === 'dashboard' && <Dashboard />}
+                {view === 'extension' && <ExtensionShowcase />}
               </div>
             </div>
             <div style={{ width: '50%', paddingInline: 0, display: 'flex', justifyContent: 'center' }} aria-hidden={!secureMode}>
@@ -43,8 +45,15 @@ export const App = () => {
 
 import { useState } from 'react';
 
-const Header = ({ onNavigate, current }: { onNavigate: (v: 'home' | 'dashboard') => void; current: string }) => {
-  const { setAuthOpen, secureMode, toggleSecureMode } = useUIStore();
+const Header = ({ onNavigate, current }: { onNavigate: (v: 'home' | 'dashboard' | 'extension') => void; current: string }) => {
+  const { setAuthOpen, secureMode, toggleSecureMode, user, setUser } = useUIStore();
+  const [menuOpen, setMenuOpen] = useState(false);
+  // Close user menu on outside click
+  useLayoutEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if(!(e.target as HTMLElement).closest('.user-menu')) setMenuOpen(false);
+    }; document.addEventListener('mousedown', handler); return () => document.removeEventListener('mousedown', handler);
+  }, []);
   return (
     <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.85rem', padding: '0.85rem 1rem' }} className="stack-mobile">
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flex: 1, minWidth: 200 }}>
@@ -55,13 +64,37 @@ const Header = ({ onNavigate, current }: { onNavigate: (v: 'home' | 'dashboard')
           {secureMode ? 'Exit Secure' : 'Secure Mode'}
         </button>
         <button
-          onClick={() => setAuthOpen(true)}
+          onClick={() => onNavigate(current === 'extension' ? 'home' : 'extension')}
           style={{ transition: 'all 0.2s ease', transform: 'scale(1)' }}
           onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.opacity = '0.9'; }}
           onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.opacity = '1'; }}
         >
-          Login / Signup
+          {current === 'extension' ? 'Back' : 'Extension Demo'}
         </button>
+        {!user && (
+          <button
+            onClick={() => setAuthOpen(true)}
+            style={{ transition: 'all 0.2s ease', transform: 'scale(1)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.opacity = '0.9'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.opacity = '1'; }}
+          >
+            Login / Signup
+          </button>
+        )}
+        {user && (
+          <div className="user-menu" style={{ position: 'relative' }}>
+            <button onClick={()=>setMenuOpen(o=>!o)} style={{ display:'flex', alignItems:'center', gap:8, background:'linear-gradient(145deg,#1d242d,#11161c)', border:'1px solid #2a3240' }}>
+              <span style={{ width:26, height:26, borderRadius:'50%', background:'linear-gradient(135deg,#4855ff,#3ddc97)', display:'grid', placeItems:'center', fontSize:'0.65rem', fontWeight:600, letterSpacing:1, color:'#fff' }}>{user.email[0]?.toUpperCase()}</span>
+              <span style={{ fontSize:'0.72rem', letterSpacing:1.2, textTransform:'uppercase', color:'#9aa7b7', maxWidth:120, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{user.email}</span>
+            </button>
+            {menuOpen && (
+              <div style={{ position:'absolute', top:'110%', right:0, background:'#11161d', border:'1px solid #1f2733', borderRadius:14, padding:'0.55rem 0.55rem', minWidth:180, display:'flex', flexDirection:'column', gap:6, boxShadow:'0 10px 28px -12px rgba(0,0,0,0.65),0 0 0 1px #1f2733', zIndex:30 }}>
+                <div style={{ fontSize:'0.55rem', letterSpacing:2, textTransform:'uppercase', color:'#5d6bff', padding:'0.25rem 0.3rem 0.2rem' }}>Account</div>
+                <button onClick={()=>{ setUser(null); setMenuOpen(false); }} style={{ background:'#1a2028', border:'1px solid #242e3b', padding:'0.55rem 0.75rem', borderRadius:10, fontSize:'0.7rem', letterSpacing:1.4, textTransform:'uppercase', textAlign:'left' }}>Logout</button>
+              </div>
+            )}
+          </div>
+        )}
         <button
           className="gradient"
           onClick={() => onNavigate(current === 'dashboard' ? 'home' : 'dashboard')}
@@ -107,15 +140,21 @@ const FloatingGrid = () => (
 
 // Secure Browser Mode Placeholder
 const SecureBrowserMode = () => {
-  const [url, setUrl] = useState('https://example.com');
-  const [loadUrl, setLoadUrl] = useState(url);
+  const { secureUrl, setSecureUrl } = useUIStore();
+  const [url, setUrl] = useState(secureUrl);
+  const [loadUrl, setLoadUrl] = useState(secureUrl);
   const [loading, setLoading] = useState(false);
+  // Sync store changes when triggered externally
+  if (secureUrl !== loadUrl) {
+    setLoadUrl(secureUrl);
+    if (secureUrl !== url) setUrl(secureUrl);
+  }
   return (
     <div style={{ width: '100%', maxWidth: 1240, display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
       <h1 style={{ margin: 0, fontSize: '2rem', background: 'linear-gradient(110deg,#fff,#ffe7d2 40%,#ffb347)', WebkitBackgroundClip: 'text', color: 'transparent' }}>Secure Container Browser</h1>
       <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.5, color: 'var(--text-dim)' }}>Ephemeral isolated browsing surface. Sessions reset on exit. Network instrumentation & deepfake shield overlays would appear here in a full build.</p>
       <div className="secure-panel" style={{ borderRadius: 20, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 520, position: 'relative' }}>
-        <form onSubmit={(e)=>{ e.preventDefault(); if(!url.trim()) return; let u=url.trim(); if(!/^https?:\/\//i.test(u)) u='https://' + u; setLoadUrl(u); setLoading(true); }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0.6rem 0.75rem', background: '#1d252e', borderBottom: '1px solid #2c3642' }}>
+  <form onSubmit={(e)=>{ e.preventDefault(); if(!url.trim()) return; let u=url.trim(); if(!/^https?:\/\//i.test(u)) u='https://' + u; setLoadUrl(u); setSecureUrl(u); setLoading(true); }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0.6rem 0.75rem', background: '#1d252e', borderBottom: '1px solid #2c3642' }}>
           <div style={{ display: 'flex', gap: 6 }}>
             <span style={{ width: 12, height: 12, borderRadius: '50%', background: '#ff5f56', boxShadow: '0 0 6px -2px #ff5f56aa' }} />
             <span style={{ width: 12, height: 12, borderRadius: '50%', background: '#ffbd2e', boxShadow: '0 0 6px -2px #ffbd2eaa' }} />
